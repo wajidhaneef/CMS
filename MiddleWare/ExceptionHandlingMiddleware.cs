@@ -12,6 +12,7 @@ namespace CMS.MiddleWare
     public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
     {
         private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+        public ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> logger) {  _logger = logger; }
         public async Task Invoke(FunctionContext functionContext, FunctionExecutionDelegate executionDelegate)
         {
             try

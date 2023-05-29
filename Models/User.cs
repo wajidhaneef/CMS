@@ -21,5 +21,7 @@ namespace CMS.Models
         [Required]
         public string Password { get; set; }
         public string Phone { get; set; }
+        [ForeignKey(nameof(RoleId))]
+        public Role RoleId { get; set; }
     }
 }
