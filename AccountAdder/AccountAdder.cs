@@ -23,14 +23,11 @@ namespace CMS.AccountAdder
         }
 
         [FunctionName("AccountAdder")]
-        [OpenApiOperation(operationId: "Run", tags: new[] { "name" })]
-        [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "code", In = OpenApiSecurityLocationType.Query)]
-        [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
-        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
-        public async Task<IActionResult> Run(
+
+        public async Task<IActionResult> Account(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req)
         {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
+            _logger.LogInformation("Account Adder Azure function Trigger");
 
             string name = req.Query["name"];
 
@@ -39,11 +36,15 @@ namespace CMS.AccountAdder
             name = name ?? data?.name;
 
             string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
+                ? "You have not passed any parameter"
+                : $"Hello, {name}. Well done.";
 
             return new OkObjectResult(responseMessage);
         }
     }
 }
 
+//[OpenApiOperation(operationId: "Run", tags: new[] { "name" })]
+//[OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "code", In = OpenApiSecurityLocationType.Query)]
+//[OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
+//[OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
