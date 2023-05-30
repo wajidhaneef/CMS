@@ -13,8 +13,6 @@ namespace CMS.Models
     {
         public int PermissionId { get; set; }
         public string PermissionType { get; set; }
-        public ICollection<Role> Roles { get; set; }
-        //[ForeignKey(nameof(RoleId))]
         
     }
 }

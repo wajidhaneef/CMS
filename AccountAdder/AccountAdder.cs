@@ -8,16 +8,31 @@ using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore;
 using CMS.Data;
-
+using OpenIddict.Abstractions;
+using CMS.AuthorizationService;
 namespace CMS.AccountAdder
 {
     public class AccountAdder
     {
         private readonly CMSDBContext _dbContext;
 
-        public AccountAdder(CMSDBContext dbContext)
+        //OpenIdDict
+        private readonly IOpenIddictApplicationManager _applicationManager;
+        private readonly IOpenIddictAuthorizationManager _authorizationManager;
+        private readonly IOpenIddictScopeManager _scopeManager;
+        private readonly AuthorizationService1 _authService;
+
+        public AccountAdder(CMSDBContext dbContext,
+            IOpenIddictApplicationManager applicationManager,
+      IOpenIddictAuthorizationManager authorizationManager,
+      IOpenIddictScopeManager scopeManager,
+      AuthorizationService1 authService)
         {
             _dbContext = dbContext;
+            _applicationManager = applicationManager;
+            _authorizationManager = authorizationManager;
+            _scopeManager = scopeManager;
+            _authService = authService;
         }
         
         [FunctionName("AccountAdder")]
