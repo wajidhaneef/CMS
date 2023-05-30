@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace CMS
@@ -14,11 +13,8 @@ namespace CMS
     {
         [FunctionName("Function1")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "test")] HttpRequest req,
-            ILogger log)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "test")] HttpRequest req)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
-
             string name = req.Query["name"];
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
@@ -32,9 +28,10 @@ namespace CMS
             return new OkObjectResult(responseMessage);
         }
         [FunctionName("hello")]
-        public static async Task<IActionResult> Hello([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route ="hello")] HttpRequest request,
-            ILogger log)
+        public static async Task<IActionResult> Hello([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route ="hello")] HttpRequest request)
         {
+
+            //return new OkObjectResult("Wajid");
             string name = request.Query["name"];
 
             string requestBody = await new StreamReader (request.Body).ReadToEndAsync();
@@ -46,3 +43,16 @@ namespace CMS
         }
     }
 }
+
+//namespace CMS
+//{
+//    public class StartUp : FunctionsStartup
+//    {
+//        public override void Configure(IFunctionsHostBuilder builder)
+//        {
+//            string connectionString = Environment.GetEnvironmentVariable("CMSString");
+//            builder.Services.AddDbContext<CMSDBContext>(
+//              options => SqlServerDbContextOptionsExtensions.UseSqlServer(options, connectionString));
+//        }
+//    }
+//}

@@ -1,34 +1,30 @@
+using System;
 using System.IO;
-using System.Net;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
-using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
+using CMS.Data;
 
 namespace CMS.AccountAdder
 {
     public class AccountAdder
     {
-        private readonly ILogger<AccountAdder> _logger;
+        private readonly CMSDBContext _dbContext;
 
-        public AccountAdder(ILogger<AccountAdder> log)
+        public AccountAdder(CMSDBContext dbContext)
         {
-            _logger = log;
+            _dbContext = dbContext;
         }
-
+        
         [FunctionName("AccountAdder")]
-
-        public async Task<IActionResult> Account(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req)
+        public async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req)
         {
-            _logger.LogInformation("Account Adder Azure function Trigger");
-
+            //log.LogInformation("C# HTTP trigger function processed a request.");
             string name = req.Query["name"];
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
@@ -36,15 +32,17 @@ namespace CMS.AccountAdder
             name = name ?? data?.name;
 
             string responseMessage = string.IsNullOrEmpty(name)
-                ? "You have not passed any parameter"
-                : $"Hello, {name}. Well done.";
-
-            return new OkObjectResult(responseMessage);
+                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
+                : $"Hello, {name}. This HTTP triggered function executed successfully.";
+            // Read from the database
+            try { var user = await _dbContext.Users.ToListAsync();
+                return new OkObjectResult(user);
+            }
+            catch (Exception ex)
+            {
+                return new OkObjectResult(ex);
+            }
+            
         }
     }
 }
-
-//[OpenApiOperation(operationId: "Run", tags: new[] { "name" })]
-//[OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "code", In = OpenApiSecurityLocationType.Query)]
-//[OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
-//[OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
