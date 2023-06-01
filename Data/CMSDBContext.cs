@@ -1,4 +1,5 @@
 ﻿using CMS.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,11 +11,18 @@ namespace CMS.Data
 {
     public class CMSDBContext : DbContext
     {
+        public CMSDBContext()
+        {
+                
+        }
         public CMSDBContext(DbContextOptions<CMSDBContext> options): base(options) { }
-        public User Users { get; set; }
-        public Role Roles { get; set; }
-        public Permission Permissions { get; set; }
+        public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+        //public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet< Permission> Permissions { get; set; }
 
-        
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer("Server=localhost\\SQLEXPRESS;Database=CMS;Trusted_Connection=True;");
+        }
     }
 }

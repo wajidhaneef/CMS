@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -14,9 +13,6 @@ namespace CMS.Models
     {
         public int PermissionId { get; set; }
         public string PermissionType { get; set; }
-        public ICollection<Role> Roles { get; set; }
-        [ForeignKey(nameof(RoleId))]
-        public int RoleId { get; set; }
         
     }
 }

@@ -1,50 +1,170 @@
-using System.IO;
-using System.Net;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
-using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
+//using System;
+//using System.IO;
+//using System.Threading.Tasks;
+//using Microsoft.AspNetCore.Mvc;
+//using Microsoft.Azure.WebJobs;
+//using Microsoft.Azure.WebJobs.Extensions.Http;
+//using Microsoft.AspNetCore.Http;
+//using Newtonsoft.Json;
+//using Microsoft.EntityFrameworkCore;
+//using CMS.Data;
+//using OpenIddict.Abstractions;
+//using Microsoft.AspNetCore.Authorization;
+//using CMS.Models;
+//using CMS.Encryption;
+//using System.Text;
 
-namespace CMS.AccountAdder
-{
-    public class AccountAdder
-    {
-        private readonly ILogger<AccountAdder> _logger;
+//namespace CMS.AccountAdder
+//{
+//    public class AccountAdder
+//    {
+//        private readonly CMSDBContext _dbContext;
 
-        public AccountAdder(ILogger<AccountAdder> log)
-        {
-            _logger = log;
-        }
+//        public AccountAdder(CMSDBContext db)
+//        {
+//            _dbContext = db;
+//        }
 
-        [FunctionName("AccountAdder")]
+//        [FunctionName("GetAccount")]
+//        //[Authorize]
+//        public async Task<IActionResult> GetAccount(
+//            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "accounts")] HttpRequest req)
+//        {
+//            //log.LogInformation("C# HTTP trigger function processed a request.");
+//            string name = req.Query["name"];
 
-        public async Task<IActionResult> Account(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req)
-        {
-            _logger.LogInformation("Account Adder Azure function Trigger");
+//            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+//            dynamic data = JsonConvert.DeserializeObject(requestBody);
+//            name = name ?? data?.name;
 
-            string name = req.Query["name"];
+//            string responseMessage = string.IsNullOrEmpty(name)
+//                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
+//                : $"Hello, {name}. This HTTP triggered function executed successfully.";
+            
+//            // Read from the database
+//            try { var user = await _dbContext.ApplicationUsers.ToListAsync();
+//                return new OkObjectResult(user);
+//            }
+//            catch (Exception ex)
+//            {
+//                return new OkObjectResult(ex);
+//            }
+            
+//        }
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
+//        //Add User
+//        [FunctionName("AddAccount")]
+//        //[Authorize]
+//        public async Task<IActionResult> AddAccount(
+//            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "add-user")] HttpRequest req)
+//        {
+//            //log.LogInformation("C# HTTP trigger function processed a request.");
+//            string name = req.Query["name"];
+//            string password = req.Query["password"];
+//            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+//            dynamic data = JsonConvert.DeserializeObject(requestBody);
+//            name = name ?? data?.name;
+//            password = password ?? data?.password;
 
-            string responseMessage = string.IsNullOrEmpty(name)
-                ? "You have not passed any parameter"
-                : $"Hello, {name}. Well done.";
+//            string responseMessage = string.IsNullOrEmpty(name)
+//                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
+//                : $"Hello, {name}. This HTTP triggered function executed successfully.";
 
-            return new OkObjectResult(responseMessage);
-        }
-    }
-}
+//            //Encrypt password
+//            byte[] salt = PasswordEncryption.GenerateSalt();
+//            string hashedPassword = PasswordEncryption.HashPassword(password, salt);
 
-//[OpenApiOperation(operationId: "Run", tags: new[] { "name" })]
-//[OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "code", In = OpenApiSecurityLocationType.Query)]
-//[OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
-//[OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
+//            //End - encrypt password
+//            // Add User
+//            try
+//            {
+//                ApplicationUser user = new()
+//                {
+//                    FirstName = name,
+//                    LastName = name,
+//                    Email = "wajid.haneef@devsinc.com",
+//                    Password = hashedPassword,
+//                    Salt = Encoding.UTF8.GetString(salt)
+
+//                };
+//                await _dbContext.ApplicationUsers.AddAsync(user);
+//                await _dbContext.SaveChangesAsync();
+//                return new OkObjectResult(user);
+//            }
+//            catch (Exception ex)
+//            {
+//                return new OkObjectResult(ex);
+//            }
+
+//        }
+
+//        //Login
+//        [FunctionName("LoginUser")]
+//        [Authorize]
+//        public async Task<IActionResult> Login(
+//            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "login")] HttpRequest req)
+//        {
+//            //log.LogInformation("C# HTTP trigger function processed a request.");
+//            string name = req.Query["name"];
+//            string password = req.Query["password"];
+//            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+//            dynamic data = JsonConvert.DeserializeObject(requestBody);
+//            name = name ?? data?.name;
+//            password = password ?? data?.password;
+
+            
+
+//            //End - encrypt password
+//            // Add User
+//            return new OkObjectResult("LoggedIn");
+
+//        }
+
+//        // SignUp user
+//        //Login
+//        [FunctionName("SignUpUser")]
+//        [Authorize]
+//        public async Task<IActionResult> SignUp(
+//            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "signup")] HttpRequest req)
+//        {
+//            //log.LogInformation("C# HTTP trigger function processed a request.");
+//            string name = req.Query["name"];
+//            string password = req.Query["password"];
+//            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+//            dynamic data = JsonConvert.DeserializeObject(requestBody);
+//            name = name ?? data?.name;
+//            password = password ?? data?.password;
+
+//            string responseMessage = string.IsNullOrEmpty(name)
+//                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
+//                : $"Hello, {name}. This HTTP triggered function executed successfully.";
+
+//            //Encrypt password
+//            byte[] salt = PasswordEncryption.GenerateSalt();
+//            string hashedPassword = PasswordEncryption.HashPassword(password, salt);
+
+//            //End - encrypt password
+//            // Add User
+//            try
+//            {
+//                ApplicationUser user = new()
+//                {
+//                    FirstName = name,
+//                    LastName = name,
+//                    Email = "wajid.haneef@devsinc.com",
+//                    Password = hashedPassword,
+//                    Salt = Encoding.UTF8.GetString(salt)
+
+//                };
+//                await _dbContext.ApplicationUsers.AddAsync(user);
+//                await _dbContext.SaveChangesAsync();
+//                return new OkObjectResult(user);
+//            }
+//            catch (Exception ex)
+//            {
+//                return new OkObjectResult(ex);
+//            }
+
+//        }
+//    }
+//}
