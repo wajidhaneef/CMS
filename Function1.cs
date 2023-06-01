@@ -43,16 +43,3 @@ namespace CMS
         }
     }
 }
-
-//namespace CMS
-//{
-//    public class StartUp : FunctionsStartup
-//    {
-//        public override void Configure(IFunctionsHostBuilder builder)
-//        {
-//            string connectionString = Environment.GetEnvironmentVariable("CMSString");
-//            builder.Services.AddDbContext<CMSDBContext>(
-//              options => SqlServerDbContextOptionsExtensions.UseSqlServer(options, connectionString));
-//        }
-//    }
-//}

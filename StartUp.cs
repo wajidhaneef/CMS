@@ -1,8 +1,21 @@
 ﻿using CMS.Data;
+using CMS.Models;
+using Google.Protobuf.WellKnownTypes;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,118 +30,76 @@ namespace CMS
         {
 
             //builder.Services.AddDbContext<CMSDBContext>();
-
-            //Add OpenIdDict Configuration Services
+            //Get Connection string
             string connectionString = Environment.GetEnvironmentVariable("CMSString");
             builder.Services.AddDbContext<CMSDBContext>(
-              options => 
+              options =>
               {
                   SqlServerDbContextOptionsExtensions.UseSqlServer(options, connectionString);
-                  options.UseOpenIddict();
               });
-            builder.Services.AddOpenIddict()
-            // Register the OpenIddict core components.
-            .AddCore(options =>
+            var authority = Environment.GetEnvironmentVariable("Authority");
+            var clientId = Environment.GetEnvironmentVariable("ClientId");
+            var clientSecret = Environment.GetEnvironmentVariable("ClientSecret");
+            var callbackPath = Environment.GetEnvironmentVariable("CallbackPath");
+
+            //builder.Services.AddAuthentication(x =>
+            //{
+            //    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            //    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            //})
+            //.AddJwtBearer(x => {
+            //    x.RequireHttpsMetadata = false;
+            //    x.SaveToken = true;
+            //    x.Authority = "https://localhost:7209/";
+            //    x.TokenValidationParameters = new TokenValidationParameters
+            //    {
+            //        ValidateIssuerSigningKey = true,
+            //        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(clientSecret)),
+            //        ValidateIssuer = false,
+            //        ValidateAudience = false
+            //    };
+            //});
+            builder.Services.AddHttpContextAccessor();
+            //builder.Services.AddAuthentication();
+            //builder.Services.AddAuthorization();
+            builder.Services.AddAuthentication(options =>
             {
-                // Configure OpenIddict to use the Entity Framework Core stores and models.
-                // Note: call ReplaceDefaultEntities() to replace the default entities.
-                options.UseEntityFrameworkCore()
-                       .UseDbContext<CMSDBContext>();
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                //options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = "oidc";
             })
+                .AddCookie()
+                .AddOpenIdConnect("oidc", options =>
+                {
+                    options.Authority = "https://localhost:7209/Account/Login";
+                    options.ClientId = clientId;
+                    options.ClientSecret = clientSecret;
+                    options.CallbackPath = callbackPath;
+                    options.GetClaimsFromUserInfoEndpoint = true;
+                    options.ResponseType = "code";
 
-            // Register the OpenIddict server components.
-            .AddServer(options =>
+                    options.TokenValidationParameters.NameClaimType = "name";
+                    options.TokenValidationParameters.RoleClaimType = "role";
+
+                    options.Scope.Add("wajid");
+                    options.SaveTokens = true;
+                });
+            builder.Services.AddAuthorization(options =>
             {
-                // Enable the token endpoint.
-                options.SetTokenEndpointUris("connect/token");
-
-                // Enable the client credentials flow.
-                options.AllowClientCredentialsFlow();
-
-                // Register the signing and encryption credentials.
-                options.AddDevelopmentEncryptionCertificate()
-                       .AddDevelopmentSigningCertificate();
-
-                // Register the ASP.NET Core host and configure the ASP.NET Core options.
-                options.UseAspNetCore()
-                       .EnableTokenEndpointPassthrough();
-            })
-
-            // Register the OpenIddict validation components.
-            .AddValidation(options =>
-            {
-                // Import the configuration from the local OpenIddict server instance.
-                options.UseLocalServer();
-
-                // Register the ASP.NET Core host.
-                options.UseAspNetCore();
+                options.AddPolicy("customers", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("role", "admin");
+                    policy.RequireClaim("role", "user");
+                });
             });
-
-            // Register the worker responsible of seeding the database with the sample clients.
-            // Note: in a real world application, this step should be part of a setup script.
-            //builder.Services.AddHostedService<Worker>();
-
-            
+            // Add middleware to the pipeline
         }
-    }
-    
-}
-/*
- public void ConfigureServices(IServiceCollection services)
-    {
-        services.AddControllersWithViews();
-
-        services.AddDbContext<ApplicationDbContext>(options =>
+        public void Configure(IApplicationBuilder app)
         {
-            // Configure Entity Framework Core to use Microsoft SQL Server.
-            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+            app.UseAuthentication();
+            app.UseMvc();
+        }
 
-            // Register the entity sets needed by OpenIddict.
-            // Note: use the generic overload if you need to replace the default OpenIddict entities.
-            options.UseOpenIddict();
-        });
-
-        services.AddOpenIddict()
-
-            // Register the OpenIddict core components.
-            .AddCore(options =>
-            {
-                // Configure OpenIddict to use the Entity Framework Core stores and models.
-                // Note: call ReplaceDefaultEntities() to replace the default entities.
-                options.UseEntityFrameworkCore()
-                       .UseDbContext<ApplicationDbContext>();
-            })
-
-            // Register the OpenIddict server components.
-            .AddServer(options =>
-            {
-                // Enable the token endpoint.
-                options.SetTokenEndpointUris("connect/token");
-
-                // Enable the client credentials flow.
-                options.AllowClientCredentialsFlow();
-
-                // Register the signing and encryption credentials.
-                options.AddDevelopmentEncryptionCertificate()
-                       .AddDevelopmentSigningCertificate();
-
-                // Register the ASP.NET Core host and configure the ASP.NET Core options.
-                options.UseAspNetCore()
-                       .EnableTokenEndpointPassthrough();
-            })
-
-            // Register the OpenIddict validation components.
-            .AddValidation(options =>
-            {
-                // Import the configuration from the local OpenIddict server instance.
-                options.UseLocalServer();
-
-                // Register the ASP.NET Core host.
-                options.UseAspNetCore();
-            });
-
-        // Register the worker responsible of seeding the database with the sample clients.
-        // Note: in a real world application, this step should be part of a setup script.
-        services.AddHostedService<Worker>();
     }
- */
+}
